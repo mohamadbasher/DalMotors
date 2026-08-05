@@ -39,6 +39,14 @@ function RootNavigator() {
       <Stack.Screen name="admin-cities" options={{ headerShown: true, title: t('manageCities') }} />
       <Stack.Screen name="admin-brands" options={{ headerShown: true, title: t('manageBrands') }} />
       <Stack.Screen name="admin-videos" options={{ headerShown: true, title: t('manageVideos') }} />
+      <Stack.Screen
+        name="admin-video-queue"
+        options={{ headerShown: true, title: t('videoModeration') }}
+      />
+      <Stack.Screen name="admin-reports" options={{ headerShown: true, title: t('reports') }} />
+      <Stack.Screen name="admin-banners" options={{ headerShown: true, title: t('manageBanners') }} />
+      <Stack.Screen name="admin-legal" options={{ headerShown: true, title: t('manageLegal') }} />
+      <Stack.Screen name="notifications" options={{ headerShown: true, title: t('notifications') }} />
       <Stack.Screen name="menu" options={{ headerShown: true, title: t('menuTitle') }} />
       <Stack.Screen
         name="saved-searches"

@@ -36,3 +36,8 @@ export function uploadStoreVideo(userId: string, localUri: string) {
 export function uploadAvatar(userId: string, localUri: string) {
   return uploadFile('avatars', `${userId}/avatar_${Date.now()}.jpg`, localUri, 'image/jpeg');
 }
+
+/** Upload a home-screen banner (admins only, enforced by storage policy). */
+export function uploadBanner(userId: string, localUri: string) {
+  return uploadFile('banners', `${userId}/banner_${Date.now()}.jpg`, localUri, 'image/jpeg');
+}

@@ -42,3 +42,43 @@ export async function registerForPushNotifications(userId: string): Promise<void
     .from('push_tokens')
     .upsert({ user_id: userId, token, platform: Platform.OS }, { onConflict: 'token' });
 }
+
+// ---------- In-app notification centre ----------
+
+export interface AppNotification {
+  id: string;
+  type: string;
+  title: string;
+  body: string | null;
+  payload: Record<string, unknown>;
+  read_at: string | null;
+  created_at: string;
+}
+
+export async function fetchNotifications(userId: string): Promise<AppNotification[]> {
+  const { data } = await supabase
+    .from('notifications')
+    .select('*')
+    .eq('user_id', userId)
+    .order('created_at', { ascending: false })
+    .limit(100);
+  return (data ?? []) as AppNotification[];
+}
+
+export async function countUnread(userId: string): Promise<number> {
+  const { count } = await supabase
+    .from('notifications')
+    .select('id', { count: 'exact', head: true })
+    .eq('user_id', userId)
+    .is('read_at', null);
+  return count ?? 0;
+}
+
+/** Marks everything unread as read — called when the inbox is opened. */
+export async function markAllRead(userId: string): Promise<void> {
+  await supabase
+    .from('notifications')
+    .update({ read_at: new Date().toISOString() })
+    .eq('user_id', userId)
+    .is('read_at', null);
+}

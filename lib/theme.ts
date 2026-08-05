@@ -35,7 +35,13 @@ export const radius = {
   full: 999,
 };
 
+/**
+ * Elevation recipes (iOS shadow + Android elevation).
+ * `card` is the workhorse; `float` lifts app chrome off the canvas;
+ * `cta` gives primary buttons an amber glow.
+ */
 export const shadow = {
+  /** Soft lift for cards sitting on the canvas. */
   card: {
     shadowColor: '#0F172A',
     shadowOffset: { width: 0, height: 2 },
@@ -43,7 +49,26 @@ export const shadow = {
     shadowRadius: 8,
     elevation: 2,
   },
+  /** Stronger lift for floating chrome (top bar, sticky footers). */
+  float: {
+    shadowColor: '#0B1426',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.18,
+    shadowRadius: 14,
+    elevation: 8,
+  },
+  /** Amber glow for primary calls to action. */
+  cta: {
+    shadowColor: colors.accent,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.35,
+    shadowRadius: 10,
+    elevation: 5,
+  },
 };
+
+/** The brand gradient used by the splash, auth hero and dark surfaces. */
+export const brandGradient = ['#1A2C55', '#0C1B33', '#070D1B'] as const;
 
 export const CURRENCY = '₪';
 

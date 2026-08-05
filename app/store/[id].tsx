@@ -3,6 +3,7 @@ import {
   Alert,
   FlatList,
   Linking,
+  Platform,
   RefreshControl,
   StyleSheet,
   Text,
@@ -14,10 +15,11 @@ import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '../../context/AuthContext';
 import { supabase } from '../../lib/supabase';
 import { Store, StoreReview, Vehicle } from '../../lib/types';
+import { isOpenNow, parseHours, todayHours, WEEKDAY_KEYS } from '../../lib/hours';
 import { colors, radius, shadow, spacing } from '../../lib/theme';
 import { ROW, RTL_TEXT } from '../../lib/rtl';
 import { useI18n } from '../../lib/i18n';
-import { Button, EmptyState, Input, SearchBar } from '../../components/ui';
+import { Button, EmptyState, Input, SearchBar, SectionHeader } from '../../components/ui';
 import { StarRating } from '../../components/StarRating';
 import { VehicleCard } from '../../components/VehicleCard';
 
@@ -109,6 +111,26 @@ export default function StoreDetail() {
 
   const isOwnStore = session?.user.id === store?.owner_id;
 
+  const storeHours = parseHours(store?.hours ?? null);
+  const today = todayHours(storeHours);
+  // Both must agree: the weekly schedule says "open now" AND the dealer hasn't
+  // manually flipped the store closed.
+  const openRightNow = !!store?.is_open && isOpenNow(storeHours);
+
+  function openDirections() {
+    if (!store?.lat || !store?.lng) return;
+    const label = encodeURIComponent(store.name);
+    // geo: on Android opens the user's default maps app; iOS has no geo: handler,
+    // so fall back to Apple Maps' universal URL.
+    const url =
+      Platform.OS === 'ios'
+        ? `http://maps.apple.com/?daddr=${store.lat},${store.lng}&q=${label}`
+        : `geo:${store.lat},${store.lng}?q=${store.lat},${store.lng}(${label})`;
+    Linking.openURL(url).catch(() => {
+      Linking.openURL(`https://www.google.com/maps/search/?api=1&query=${store.lat},${store.lng}`);
+    });
+  }
+
   return (
     <View style={styles.safe}>
       <FlatList
@@ -150,16 +172,82 @@ export default function StoreDetail() {
                 {store.description ? (
                   <Text style={styles.storeDesc}>{store.description}</Text>
                 ) : null}
-                {store.phone ? (
-                  <TouchableOpacity
-                    style={[ROW, styles.callBtn]}
-                    onPress={() => Linking.openURL(`tel:${store.phone}`)}
-                  >
-                    <Ionicons name="call" size={16} color="#FFFFFF" />
-                    <Text style={styles.callBtnText}>{t('callStore')}</Text>
-                  </TouchableOpacity>
-                ) : null}
+                {/* open / closed + today's hours */}
+                {storeHours && (
+                  <View style={[ROW, styles.statusRow]}>
+                    <View
+                      style={[
+                        styles.statusPill,
+                        { backgroundColor: openRightNow ? colors.successSoft : colors.dangerSoft },
+                      ]}
+                    >
+                      <View
+                        style={[
+                          styles.statusDot,
+                          { backgroundColor: openRightNow ? colors.success : colors.danger },
+                        ]}
+                      />
+                      <Text
+                        style={[
+                          styles.statusPillText,
+                          { color: openRightNow ? colors.success : colors.danger },
+                        ]}
+                      >
+                        {openRightNow ? t('openNow') : t('closedNow')}
+                      </Text>
+                    </View>
+                    <Text style={styles.todayText}>
+                      {today?.open ? `${t('todayHours')} ${today.from} – ${today.to}` : t('closedToday')}
+                    </Text>
+                  </View>
+                )}
+
+                <View style={[ROW, styles.actionsRow]}>
+                  {store.phone ? (
+                    <TouchableOpacity
+                      style={[ROW, styles.callBtn]}
+                      onPress={() => Linking.openURL(`tel:${store.phone}`)}
+                    >
+                      <Ionicons name="call" size={16} color="#FFFFFF" />
+                      <Text style={styles.callBtnText}>{t('callStore')}</Text>
+                    </TouchableOpacity>
+                  ) : null}
+                  {store.lat != null && store.lng != null ? (
+                    <TouchableOpacity style={[ROW, styles.directionsBtn]} onPress={openDirections}>
+                      <Ionicons name="navigate" size={16} color={colors.primary} />
+                      <Text style={styles.directionsText}>{t('directions')}</Text>
+                    </TouchableOpacity>
+                  ) : null}
+                </View>
               </View>
+            )}
+
+            {/* full week */}
+            {storeHours && (
+              <>
+                <SectionHeader title={t('openingHours')} />
+                <View style={styles.hoursCard}>
+                  {storeHours.map((d) => {
+                    const isToday = d.day === new Date().getDay();
+                    return (
+                      <View key={d.day} style={[ROW, styles.hourRow, isToday && styles.hourRowToday]}>
+                        <Text style={[styles.hourDay, isToday && styles.hourTodayText]}>
+                          {t(WEEKDAY_KEYS[d.day])}
+                        </Text>
+                        <Text
+                          style={[
+                            styles.hourValue,
+                            isToday && styles.hourTodayText,
+                            !d.open && { color: colors.danger },
+                          ]}
+                        >
+                          {d.open ? `${d.from} – ${d.to}` : t('closedNow')}
+                        </Text>
+                      </View>
+                    );
+                  })}
+                </View>
+              </>
             )}
 
             {/* reviews */}
@@ -272,6 +360,45 @@ const styles = StyleSheet.create({
     marginTop: spacing.md,
   },
   callBtnText: { color: '#FFFFFF', fontWeight: '700', fontSize: 14 },
+  statusRow: { alignItems: 'center', gap: spacing.sm, marginTop: spacing.md },
+  statusPill: {
+    flexDirection: 'row-reverse',
+    alignItems: 'center',
+    gap: 5,
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: radius.full,
+  },
+  statusDot: { width: 7, height: 7, borderRadius: 4 },
+  statusPillText: { fontSize: 12, fontWeight: '800' },
+  todayText: { fontSize: 12.5, color: colors.textMuted },
+  actionsRow: { gap: spacing.sm, marginTop: spacing.md },
+  directionsBtn: {
+    alignItems: 'center',
+    gap: 6,
+    backgroundColor: colors.accent,
+    paddingHorizontal: spacing.lg,
+    paddingVertical: 10,
+    borderRadius: radius.full,
+  },
+  directionsText: { color: colors.primary, fontWeight: '800', fontSize: 14 },
+  hoursCard: {
+    backgroundColor: colors.surface,
+    borderRadius: radius.md,
+    padding: spacing.md,
+    marginBottom: spacing.md,
+    ...shadow.card,
+  },
+  hourRow: {
+    justifyContent: 'space-between',
+    paddingVertical: 7,
+    paddingHorizontal: 6,
+    borderRadius: radius.sm,
+  },
+  hourRowToday: { backgroundColor: colors.accentSoft },
+  hourDay: { fontSize: 13, color: colors.textMuted, fontWeight: '600' },
+  hourValue: { fontSize: 13, color: colors.text, fontWeight: '700' },
+  hourTodayText: { color: '#B45309' },
   sectionTitle: { fontSize: 17, fontWeight: '800', color: colors.text, marginBottom: spacing.sm },
   reviewForm: {
     backgroundColor: colors.surface,

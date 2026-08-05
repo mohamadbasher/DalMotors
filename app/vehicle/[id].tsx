@@ -21,6 +21,7 @@ import { colors, formatKm, formatPrice, radius, shadow, spacing } from '../../li
 import { ROW, RTL_TEXT } from '../../lib/rtl';
 import { TKey, useI18n } from '../../lib/i18n';
 import { Badge, Button } from '../../components/ui';
+import { ReportSheet } from '../../components/ReportSheet';
 
 const { width: SCREEN_W } = Dimensions.get('window');
 
@@ -39,6 +40,7 @@ export default function VehicleDetail() {
   const [photoIndex, setPhotoIndex] = useState(0);
   const [loading, setLoading] = useState(true);
   const [guidance, setGuidance] = useState<PriceGuidance | null>(null);
+  const [reportOpen, setReportOpen] = useState(false);
   const viewCounted = useRef(false);
 
   const isOwner = session?.user.id === vehicle?.seller_id;
@@ -348,6 +350,18 @@ export default function VehicleDetail() {
             {vehicle.store && <Ionicons name="chevron-back" size={18} color={colors.textFaint} />}
           </TouchableOpacity>
 
+          {/* report — only on someone else's listing */}
+          {!isOwner && (
+            <TouchableOpacity
+              style={[ROW, styles.reportRow]}
+              onPress={() => setReportOpen(true)}
+              activeOpacity={0.7}
+            >
+              <Ionicons name="flag-outline" size={16} color={colors.textMuted} />
+              <Text style={styles.reportText}>{t('reportListing')}</Text>
+            </TouchableOpacity>
+          )}
+
           {/* owner / admin management */}
           {(isOwner || isAdmin) && (
             <>
@@ -407,6 +421,12 @@ export default function VehicleDetail() {
           />
         </View>
       )}
+
+      <ReportSheet
+        visible={reportOpen}
+        vehicleId={vehicle.id}
+        onClose={() => setReportOpen(false)}
+      />
     </View>
   );
 }
@@ -529,6 +549,14 @@ const styles = StyleSheet.create({
   sellerName: { fontSize: 15, fontWeight: '800', color: colors.text },
   sellerType: { fontSize: 12, color: colors.textMuted, marginTop: 1 },
   manageRow: { flexWrap: 'wrap', gap: spacing.sm },
+  reportRow: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
+    paddingVertical: spacing.lg,
+    marginTop: spacing.sm,
+  },
+  reportText: { fontSize: 13, color: colors.textMuted, fontWeight: '600' },
   contactBar: {
     position: 'absolute',
     bottom: 0,

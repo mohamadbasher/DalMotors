@@ -23,6 +23,7 @@ import { useAuth } from '../../context/AuthContext';
 import { Button, Chip, EmptyState, Input, SearchBar, ScreenHeader } from '../../components/ui';
 import { VehicleCard } from '../../components/VehicleCard';
 import { CityPicker } from '../../components/CityPicker';
+import { BannerCarousel } from '../../components/BannerCarousel';
 import { TopBar } from '../../components/TopBar';
 
 export default function AllVehicles() {
@@ -187,6 +188,9 @@ export default function AllVehicles() {
   const ListHeader = (
     <View>
       <ScreenHeader title={t('tabVehicles')} subtitle={t('allVehiclesSub')} />
+      <View style={{ marginTop: spacing.md }}>
+        <BannerCarousel />
+      </View>
       <View style={{ marginTop: spacing.md }}>
         <SearchBar
           value={filters.search}

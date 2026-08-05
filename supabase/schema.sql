@@ -649,7 +649,10 @@ revoke execute on function public.handle_new_user() from public, anon, authentic
 revoke execute on function public.protect_profile_fields() from public, anon, authenticated;
 
 -- ============================================================
--- DONE with the schema. Next steps:
+-- DONE with the base schema. Next steps:
+--   0. Run migrations/002_dal_parity.sql — notification centre, store
+--      hours/coords, banners, video moderation, legal pages, reports.
+--      (This file is the v3 base; 002 layers the newer features on top.)
 --   1. Run seed-cities.sql (80 Israeli cities with coordinates)
 --   2. Run `node supabase/seed-brands.mjs` (uploads the 32 real
 --      brand logos from assets/brands and inserts the rows)

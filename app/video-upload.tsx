@@ -71,9 +71,12 @@ export default function VideoUpload() {
         vehicle_id: vehicleId,
         url,
         caption: caption.trim() || null,
+        status: 'pending', // an admin reviews it before it reaches the public feed
       });
       if (error) throw error;
-      Alert.alert(t('videoUploaded'), '', [{ text: t('ok'), onPress: () => router.back() }]);
+      Alert.alert(t('videoUploaded'), t('videoPendingHint'), [
+        { text: t('ok'), onPress: () => router.back() },
+      ]);
     } catch (e: any) {
       Alert.alert(t('error'), e.message ?? '');
     } finally {

@@ -17,7 +17,7 @@ import { Video } from '../../lib/types';
 import { colors, radius, shadow, spacing } from '../../lib/theme';
 import { ROW, RTL_TEXT } from '../../lib/rtl';
 import { useI18n } from '../../lib/i18n';
-import { Button, EmptyState, ScreenHeader } from '../../components/ui';
+import { Badge, Button, EmptyState, ScreenHeader } from '../../components/ui';
 import { TopBar } from '../../components/TopBar';
 
 export default function MyVideos() {
@@ -103,6 +103,14 @@ export default function MyVideos() {
               <Text style={[styles.caption, RTL_TEXT]} numberOfLines={1}>
                 {item.caption || item.vehicle?.title || '🎬'}
               </Text>
+              {item.status !== 'approved' && (
+                <View style={{ alignSelf: 'flex-end', marginTop: 3 }}>
+                  <Badge
+                    label={item.status === 'pending' ? t('videoPending') : t('videoRejected')}
+                    tone={item.status === 'pending' ? 'accent' : 'danger'}
+                  />
+                </View>
+              )}
               <View style={[ROW, { alignItems: 'center', gap: 4, marginTop: 4 }]}>
                 <Ionicons name="heart" size={13} color="#FF3B5C" />
                 <Text style={styles.meta}>{item.like_count}</Text>

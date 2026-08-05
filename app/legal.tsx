@@ -1,6 +1,7 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { ScrollView, StyleSheet, Text } from 'react-native';
 import { useLocalSearchParams, useNavigation } from 'expo-router';
+import { supabase } from '../lib/supabase';
 import { colors, spacing } from '../lib/theme';
 import { RTL_TEXT } from '../lib/rtl';
 import { useI18n } from '../lib/i18n';
@@ -123,15 +124,39 @@ export default function Legal() {
   const { lang } = useI18n();
   const navigation = useNavigation();
   const legalType: LegalType = type === 'privacy' || type === 'about' ? type : 'terms';
-  const content = CONTENT[lang][legalType];
+  // Admin-editable copy from the DB, falling back to the bundled text below so
+  // the page still renders offline or before an admin has customised it.
+  const [remote, setRemote] = useState<{ title: string; body: string } | null>(null);
 
   useEffect(() => {
-    navigation.setOptions({ title: content.title });
-  }, [navigation, content.title]);
+    let cancelled = false;
+    supabase
+      .from('legal_pages')
+      .select('*')
+      .eq('key', legalType)
+      .maybeSingle()
+      .then(({ data }) => {
+        if (cancelled || !data) return;
+        const title = data[`title_${lang}`] as string;
+        const body = data[`body_${lang}`] as string;
+        if (title?.trim() && body?.trim()) setRemote({ title, body });
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [legalType, lang]);
+
+  const fallback = CONTENT[lang][legalType];
+  const title = remote?.title ?? fallback.title;
+  const paragraphs = remote ? remote.body.split('\n\n') : fallback.body;
+
+  useEffect(() => {
+    navigation.setOptions({ title });
+  }, [navigation, title]);
 
   return (
     <ScrollView style={styles.safe} contentContainerStyle={styles.container}>
-      {content.body.map((paragraph, i) => (
+      {paragraphs.map((paragraph, i) => (
         <Text key={i} style={[styles.paragraph, RTL_TEXT]}>
           {paragraph}
         </Text>

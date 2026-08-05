@@ -138,18 +138,43 @@ export function EmptyState({
   icon,
   title,
   subtitle,
+  action,
 }: {
   icon: keyof typeof Ionicons.glyphMap;
   title: string;
   subtitle?: string;
+  action?: React.ReactNode;
 }) {
   return (
     <View style={styles.empty}>
       <View style={styles.emptyIconWrap}>
-        <Ionicons name={icon} size={34} color={colors.textFaint} />
+        <Ionicons name={icon} size={34} color={colors.accent} />
       </View>
       <Text style={styles.emptyTitle}>{title}</Text>
       {subtitle ? <Text style={styles.emptySubtitle}>{subtitle}</Text> : null}
+      {action ? <View style={{ marginTop: spacing.lg }}>{action}</View> : null}
+    </View>
+  );
+}
+
+// ---------- SectionHeader ----------
+/** Section title with the amber accent bar — the app's visual signature (RTL: bar on the right). */
+export function SectionHeader({
+  title,
+  trailing,
+  style,
+}: {
+  title: string;
+  trailing?: React.ReactNode;
+  style?: ViewStyle;
+}) {
+  return (
+    <View style={[ROW, styles.sectionHead, style]}>
+      <View style={[ROW, { alignItems: 'center', gap: 8 }]}>
+        <View style={styles.sectionAccent} />
+        <Text style={styles.sectionTitle}>{title}</Text>
+      </View>
+      {trailing}
     </View>
   );
 }
@@ -260,14 +285,21 @@ const styles = StyleSheet.create({
   badgeText: { fontSize: 12, fontWeight: '700' },
   empty: { alignItems: 'center', paddingVertical: 64, paddingHorizontal: spacing.xl },
   emptyIconWrap: {
-    width: 72,
-    height: 72,
-    borderRadius: 36,
-    backgroundColor: colors.chipBg,
+    width: 76,
+    height: 76,
+    borderRadius: 38,
+    backgroundColor: colors.accentSoft,
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: spacing.lg,
   },
+  sectionHead: {
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingVertical: spacing.sm,
+  },
+  sectionAccent: { width: 4, height: 18, borderRadius: 999, backgroundColor: colors.accent },
+  sectionTitle: { fontSize: 17, fontWeight: '800', color: colors.text, ...RTL_TEXT },
   emptyTitle: { fontSize: 17, fontWeight: '700', color: colors.text, marginBottom: 4 },
   emptySubtitle: { fontSize: 14, color: colors.textMuted, textAlign: 'center' },
   searchBox: {

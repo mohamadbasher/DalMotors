@@ -12,6 +12,7 @@ A vehicle marketplace app for **iOS and Android**, built for the Israeli market 
   - If you ever want real SMS OTP login, that requires picking a paid SMS provider (Twilio Verify, an Israeli gateway, etc.) — not wired up.
 - **`supabase/schema.sql` is now the actual source of truth (v3)**, rewritten from the live database on 2026-07-14. Earlier versions of this file drifted badly out of sync with what was actually deployed (a real risk if you ever try to rebuild from an old copy) — always trust the file in the repo over memory of what "used to" be there.
 - **The `admin-reset-password` Edge Function** (`supabase/functions/admin-reset-password/`) holds the *only* privileged path in this app — it's the one place a service-role key is used, and it never leaves that function. If you redeploy it, double-check `verify_jwt` stays **true** (an earlier draft mistakenly set it to `false`, which the security reviewer caught before it shipped).
+- **The free-tier Supabase project pauses itself after ~1 week of inactivity.** When that happens every request fails with a connection timeout and the app looks broken even though nothing changed. Fix: open the Supabase dashboard and hit **Restore** on the project (takes a couple of minutes), or upgrade to Pro so it never sleeps. This already happened once — if the app suddenly can't sign in or load anything after a break, check the project status *before* debugging the code.
 - **`.env` is gitignored on purpose** — it holds your live Supabase project URL + anon key. Copy `.env.example` to `.env` and fill in your own project's values. The anon key is meant to be public-safe (it ships inside the compiled app either way), but there's no reason to put it in git history.
 - **Demo/test accounts exist in the live database** used during development (see below). If this becomes a real production app, ban or delete them and rotate the admin account before launch.
 - **Russian is a supported language, but the layout is still RTL-shaped** for all three languages (Hebrew/Arabic/Russian) — this was a deliberate scope decision, not an oversight. A true left-to-right layout for Russian would mean touching the manual `row-reverse` styling used across nearly every screen; that rewrite was judged too risky to do in a single pass. Russian text displays correctly, just inside the same RTL-oriented container structure.
@@ -59,7 +60,8 @@ supabase/
 
 1. **Create a Supabase project** at [supabase.com](https://supabase.com) (pick a region close to Israel, e.g. Frankfurt).
 2. **Run the schema**: SQL Editor → paste all of `supabase/schema.sql` → Run.
-3. **Seed cities**: SQL Editor → paste all of `supabase/seed-cities.sql` → Run.
+3. **Run migration 002**: SQL Editor → paste all of `supabase/migrations/002_dal_parity.sql` → Run.
+4. **Seed cities**: SQL Editor → paste all of `supabase/seed-cities.sql` → Run.
 4. **Allow instant sign-in** (no email confirmation, since there's no real email): Authentication → Providers → Email → turn off "Confirm email".
 5. **Connect the app**: copy `.env.example` → `.env`, fill in your project's URL + anon key (Settings → API).
 6. **Install & run**:

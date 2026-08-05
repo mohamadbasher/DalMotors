@@ -25,6 +25,10 @@ export interface Store {
   is_verified: boolean;
   rating_avg: number;
   rating_count: number;
+  hours: unknown; // DayHours[] as stored jsonb — normalise with parseHours()
+  is_open: boolean;
+  lat: number | null;
+  lng: number | null;
   created_at: string;
   // joined
   vehicles?: { count: number }[];
@@ -38,6 +42,42 @@ export interface StoreReview {
   comment: string | null;
   created_at: string;
   user?: Pick<Profile, 'full_name' | 'avatar_url'> | null;
+}
+
+export interface Banner {
+  id: string;
+  image_url: string;
+  link: string | null;
+  is_active: boolean;
+  expires_at: string | null;
+  sort: number;
+  created_at: string;
+}
+
+export interface LegalPage {
+  key: string;
+  title_he: string;
+  title_ar: string;
+  title_ru: string;
+  body_he: string;
+  body_ar: string;
+  body_ru: string;
+  updated_at: string;
+}
+
+export type ReportStatus = 'open' | 'resolved';
+
+export interface Report {
+  id: string;
+  vehicle_id: string | null;
+  reporter_id: string;
+  reason: string;
+  note: string | null;
+  status: ReportStatus;
+  created_at: string;
+  // joined
+  vehicle?: Pick<Vehicle, 'id' | 'title' | 'photos'> | null;
+  reporter?: Pick<Profile, 'full_name' | 'phone'> | null;
 }
 
 export interface SavedSearch {
@@ -83,6 +123,8 @@ export interface Vehicle {
   seller?: Pick<Profile, 'full_name' | 'phone'> | null;
 }
 
+export type VideoStatus = 'pending' | 'approved' | 'rejected';
+
 export interface Video {
   id: string;
   owner_id: string;
@@ -91,6 +133,7 @@ export interface Video {
   url: string;
   caption: string | null;
   like_count: number;
+  status: VideoStatus;
   created_at: string;
   // joined
   store?: Pick<Store, 'id' | 'name'> | null;

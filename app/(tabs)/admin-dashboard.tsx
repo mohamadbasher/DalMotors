@@ -24,6 +24,8 @@ interface Counts {
   sold: number;
   videos: number;
   cities: number;
+  pendingVideos: number;
+  openReports: number;
 }
 
 export default function AdminDashboard() {
@@ -37,19 +39,23 @@ export default function AdminDashboard() {
     sold: 0,
     videos: 0,
     cities: 0,
+    pendingVideos: 0,
+    openReports: 0,
   });
   const [refreshing, setRefreshing] = useState(false);
 
   const head = { count: 'exact' as const, head: true };
 
   const fetchCounts = useCallback(async () => {
-    const [users, stores, active, sold, videos, cities] = await Promise.all([
+    const [users, stores, active, sold, videos, cities, pending, reports] = await Promise.all([
       supabase.from('profiles').select('id', head),
       supabase.from('stores').select('id', head),
       supabase.from('vehicles').select('id', head).eq('status', 'active'),
       supabase.from('vehicles').select('id', head).eq('status', 'sold'),
       supabase.from('videos').select('id', head),
       supabase.from('cities').select('id', head),
+      supabase.from('videos').select('id', head).eq('status', 'pending'),
+      supabase.from('reports').select('id', head).eq('status', 'open'),
     ]);
     setCounts({
       users: users.count ?? 0,
@@ -58,6 +64,8 @@ export default function AdminDashboard() {
       sold: sold.count ?? 0,
       videos: videos.count ?? 0,
       cities: cities.count ?? 0,
+      pendingVideos: pending.count ?? 0,
+      openReports: reports.count ?? 0,
     });
   }, []);
 
@@ -98,6 +106,29 @@ export default function AdminDashboard() {
         </View>
 
         <View style={{ marginTop: spacing.lg, gap: spacing.sm }}>
+          {/* things waiting on the admin come first */}
+          <Action
+            icon="flag"
+            label={t('reports')}
+            badge={counts.openReports}
+            onPress={() => router.push('/admin-reports')}
+          />
+          <Action
+            icon="checkmark-done-circle"
+            label={t('videoModeration')}
+            badge={counts.pendingVideos}
+            onPress={() => router.push('/admin-video-queue')}
+          />
+          <Action
+            icon="images"
+            label={t('manageBanners')}
+            onPress={() => router.push('/admin-banners')}
+          />
+          <Action
+            icon="document-text"
+            label={t('manageLegal')}
+            onPress={() => router.push('/admin-legal')}
+          />
           <Action
             icon="pricetags"
             label={t('manageBrands')}
@@ -151,10 +182,13 @@ function Action({
   icon,
   label,
   onPress,
+  badge,
 }: {
   icon: React.ComponentProps<typeof Ionicons>['name'];
   label: string;
   onPress: () => void;
+  /** Count of items waiting; hidden when zero. */
+  badge?: number;
 }) {
   return (
     <TouchableOpacity style={[ROW, styles.action]} onPress={onPress} activeOpacity={0.8}>
@@ -162,6 +196,11 @@ function Action({
         <Ionicons name={icon} size={19} color={colors.primary} />
       </View>
       <Text style={[styles.actionText, RTL_TEXT]}>{label}</Text>
+      {badge ? (
+        <View style={styles.actionBadge}>
+          <Text style={styles.actionBadgeText}>{badge > 99 ? '99+' : badge}</Text>
+        </View>
+      ) : null}
       <Ionicons name="chevron-back" size={18} color={colors.textFaint} />
     </TouchableOpacity>
   );
@@ -208,4 +247,14 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   actionText: { flex: 1, fontSize: 15.5, fontWeight: '800', color: colors.text },
+  actionBadge: {
+    minWidth: 22,
+    height: 22,
+    borderRadius: 11,
+    paddingHorizontal: 6,
+    backgroundColor: colors.danger,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  actionBadgeText: { color: '#FFFFFF', fontSize: 11, fontWeight: '800' },
 });
