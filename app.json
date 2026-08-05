@@ -8,9 +8,15 @@
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "com.dalmotors.app",
+      "buildNumber": "1",
+      "infoPlist": {
+        "ITSAppUsesNonExemptEncryption": false
+      }
     },
     "android": {
+      "package": "com.dalmotors.app",
       "adaptiveIcon": {
         "backgroundColor": "#E6F4FE",
         "foregroundImage": "./assets/android-icon-foreground.png",
@@ -30,6 +36,13 @@
         "expo-location",
         {
           "locationWhenInUsePermission": "AutoHub משתמש במיקום שלך כדי להראות רכבים וחנויות קרובות אליך."
+        }
+      ],
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "AutoHub צריך גישה לתמונות כדי שתוכלו להעלות תמונות וסרטונים של הרכב.",
+          "cameraPermission": "AutoHub צריך גישה למצלמה כדי לצלם את הרכב שלכם."
         }
       ]
     ]
